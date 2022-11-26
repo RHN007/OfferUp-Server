@@ -37,6 +37,8 @@ async function run(){
         const usersCollection = client.db('offerUp').collection('users'); 
         const feedbackCollection = client.db('offerUp').collection('feedback'); 
         const advertisementCollection = client.db('offerUp').collection('advertisement'); 
+        const bookingsCollection = client.db('offerUp').collection('bookings'); 
+        const paymentCollection = client.db('offerUp').collection('payments'); 
 
 
         //Note: make sure verify Admin after verify JWT
@@ -89,6 +91,14 @@ async function run(){
             const result = await feedbackCollection.find(query).limit(3).sort({$natural:-1}).toArray()
             res.send(result)
         })
+        //get Specific add by user 
+        // app.get('/userAd', async(req, res)=> {
+        //     const email = req.query.userEmail
+        //     const query = {"details.email":email}
+        //      const cursor =  advertisementCollection.find(query)
+        //      const result = await cursor.toArray()
+        //      res.send(result)
+        // })
 
         app.get('/jwt', async (req, res) => {
             const email = req.query.email;
@@ -107,7 +117,7 @@ async function run(){
             const result = await advertisementCollection.find(query).toArray()
             res.send(result)
         })
-        
+   
         
         app.post('/advertisement', async(req,res)=> {
             const advertisement = req.body; 
@@ -119,6 +129,12 @@ async function run(){
             const id = req.params.id; 
             const filter = {_id:ObjectId(id)}
             const result = await advertisementCollection.deleteOne(filter)
+            res.send(result)
+        })
+        app.delete('/users/:id', async(req, res) => {
+            const id = req.params.id; 
+            const filter = {_id:ObjectId(id)}
+            const result = await usersCollection.deleteOne(filter)
             res.send(result)
         })
 
@@ -136,20 +152,21 @@ async function run(){
             const result = await usersCollection.updateOne(filter, updatedDoc, options);
             res.send(result);
         })
-        // getAmin 
-        app.get('/users/admin/:email', async (req, res) => {
+     
+
+        //Showing Data for Seller : 
+        app.get('/users/seller/:email', async (req, res)=> {
+            const email = req.params.email; 
+            const query = {email}
+            const user = await usersCollection.findOne(query)
+            res.send({isSeller:user?.userType === 'seller'})
+        })
+           // getAmin 
+           app.get('/users/admin/:email', async (req, res) => {
             const email = req.params.email;
             const query = { email }
             const user = await usersCollection.findOne(query);
             res.send({ isAdmin: user?.role === 'admin' });
-        })
-
-        //Showing Data for Seller : 
-        app.get('/users/seller/:email', async(req, res)=> {
-            const email = req.params.email; 
-            const query = {email}
-            const user = await usersCollection.find(query); 
-            res.send({isSeller:user?.userType ==='Seller'})
         })
 
     }
