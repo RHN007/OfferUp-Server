@@ -5,7 +5,7 @@ const app = express();
 const jwt = require('jsonwebtoken');
 const { query } = require('express');
 require('dotenv').config();
-// const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const port = process.env.PORT || 9000;
 // middleware
 app.use(cors());
@@ -38,7 +38,7 @@ async function run(){
         const feedbackCollection = client.db('offerUp').collection('feedback'); 
         const advertisementCollection = client.db('offerUp').collection('advertisement'); 
         const bookingsCollection = client.db('offerUp').collection('bookings'); 
-        const paymentCollection = client.db('offerUp').collection('payments'); 
+        const paymentsCollection = client.db('offerUp').collection('payments'); 
 
 
         //Note: make sure verify Admin after verify JWT
@@ -114,10 +114,27 @@ async function run(){
         //Advertisement Collection : 
         app.get('/advertisement', async(req, res)=>{
             const query = {}
-            const result = await advertisementCollection.find(query).toArray()
+            const result = await advertisementCollection.find(query).toArray()     
             res.send(result)
         })
+        app.get('/bookings/:id', async(req, res) => {
+            const id= req.params.id; 
+            const query = {_id:ObjectId(id)}
+            const booking = await bookingsCollection.findOne(query)
+            res.send(booking)
+        })
+//Getting booking Data : 
+app.get('/bookings', async(req, res)=>{
+    const email = req.query.email; 
+    const query = {email:email}
+    const bookings = await bookingsCollection.find(query).toArray()
+    res.send(bookings)
+} )
 
+
+
+
+//Sending Booking data to Server 
         app.post('/bookings', async (req, res) => {
             const booking = req.body;
             console.log(booking);
@@ -130,7 +147,6 @@ async function run(){
                 const message = `You already have a booking on ${booking.name}`
                 return res.send({ acknowledged: false, message })
             }
-
             const result = await bookingsCollection.insertOne(booking);
             res.send(result);
         });
@@ -189,6 +205,42 @@ async function run(){
             const query = { email }
             const user = await usersCollection.findOne(query);
             res.send({ isAdmin: user?.role === 'admin' });
+        })
+
+        // Payment 
+        //payment Stipes 
+
+        app.post('/create-payment-intent', async (req, res) => {
+            const booking = req.body;
+            const price = booking.price;
+            const amount = price * 100;
+
+            const paymentIntent = await stripe.paymentIntents.create({
+                currency: 'usd',
+                amount: amount,
+                "payment_method_types": [
+                    "card"
+                ]
+            });
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            });
+        });
+
+
+        app.post('/payments', async (req, res) =>{
+            const payment = req.body;
+            const result = await paymentsCollection.insertOne(payment);
+            const id = payment.bookingId
+            const filter = {_id: ObjectId(id)}
+            const updatedDoc = {
+                $set: {
+                    paid: true,
+                    transactionId: payment.transactionId
+                }
+            }
+            const updatedResult = await bookingsCollection.updateOne(filter, updatedDoc)
+            res.send(result);
         })
 
     }
