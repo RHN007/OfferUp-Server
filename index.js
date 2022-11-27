@@ -31,40 +31,40 @@ function verifyJWT(req, res, next) {
 
 }
 
-async function run(){
+async function run() {
     try {
-        const productCollection = client.db('offerUp').collection('productCategories'); 
-        const usersCollection = client.db('offerUp').collection('users'); 
-        const feedbackCollection = client.db('offerUp').collection('feedback'); 
-        const advertisementCollection = client.db('offerUp').collection('advertisement'); 
-        const bookingsCollection = client.db('offerUp').collection('bookings'); 
-        const paymentsCollection = client.db('offerUp').collection('payments'); 
+        const productCollection = client.db('offerUp').collection('productCategories');
+        const usersCollection = client.db('offerUp').collection('users');
+        const feedbackCollection = client.db('offerUp').collection('feedback');
+        const advertisementCollection = client.db('offerUp').collection('advertisement');
+        const bookingsCollection = client.db('offerUp').collection('bookings');
+        const paymentsCollection = client.db('offerUp').collection('payments');
 
 
         //Note: make sure verify Admin after verify JWT
-      const verifyAdmin = async(req, res, next) => {
-        console.log('Inside verifyAdmin', req.decoded.email)
-        const decodedEmail = req.decoded.email;
-        const query = { email: decodedEmail };
-        const user = await usersCollection.findOne(query);
+        const verifyAdmin = async (req, res, next) => {
+            console.log('Inside verifyAdmin', req.decoded.email)
+            const decodedEmail = req.decoded.email;
+            const query = { email: decodedEmail };
+            const user = await usersCollection.findOne(query);
 
-        if (user?.role !== 'admin') {
-            return res.status(403).send({ message: 'forbidden access' })
+            if (user?.role !== 'admin') {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            next()
         }
-        next()
-  }
-  
 
 
-        app.get('/category', async(req, res)=> {
+
+        app.get('/category', async (req, res) => {
             const query = {}
-            const result =await productCollection.find(query).toArray()
+            const result = await productCollection.find(query).toArray()
             res.send(result)
         })
         //To find Brand Name: 
-        app.get('/categoryList', async(req,res)=> {
+        app.get('/categoryList', async (req, res) => {
             const query = {}
-            const result = await productCollection.find(query).project({category_name:1}).toArray()
+            const result = await productCollection.find(query).project({ category_name: 1 }).toArray()
             res.send(result)
         })
 
@@ -86,18 +86,18 @@ async function run(){
             const result = await feedbackCollection.insertOne(user);
             res.send(result);
         });
-        app.get('/feedback', async(req, res)=> {
+        app.get('/feedback', async (req, res) => {
             const query = {}
-            const result = await feedbackCollection.find(query).limit(3).sort({$natural:-1}).toArray()
+            const result = await feedbackCollection.find(query).limit(3).sort({ $natural: -1 }).toArray()
             res.send(result)
         })
         // get Specific add by user 
-        app.get('/userAd', async(req, res)=> {
+        app.get('/userAd', async (req, res) => {
             const email = req.query.userEmail
-            const query = {email:email}
-             const cursor =  advertisementCollection.find(query)
-             const result = await cursor.toArray()
-             res.send(result)
+            const query = { email: email }
+            const cursor = advertisementCollection.find(query)
+            const result = await cursor.toArray()
+            res.send(result)
         })
 
         app.get('/jwt', async (req, res) => {
@@ -108,39 +108,34 @@ async function run(){
                 const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '1h' })
                 return res.send({ accessToken: token });
             }
-            res.status(403).send({ accessToken:''})
+            res.status(403).send({ accessToken: '' })
         });
 
-        //Advertisement Collection : 
-        app.get('/advertisement', async(req, res)=>{
-            const query = {}
-            const result = await advertisementCollection.find(query).toArray()     
-            res.send(result)
-        })
-        app.get('/bookings/:id', async(req, res) => {
-            const id= req.params.id; 
-            const query = {_id:ObjectId(id)}
+
+        app.get('/bookings/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
             const booking = await bookingsCollection.findOne(query)
             res.send(booking)
         })
-//Getting booking Data : 
-app.get('/bookings', async(req, res)=>{
-    const email = req.query.email; 
-    const query = {email:email}
-    const bookings = await bookingsCollection.find(query).toArray()
-    res.send(bookings)
-} )
+        //Getting booking Data : 
+        app.get('/bookings', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email }
+            const bookings = await bookingsCollection.find(query).toArray()
+            res.send(bookings)
+        })
 
 
 
 
-//Sending Booking data to Server 
+        //Sending Booking data to Server 
         app.post('/bookings', async (req, res) => {
             const booking = req.body;
             console.log(booking);
             const query = {
                 email: booking.email,
-                name: booking.name    
+                name: booking.name
             }
             const alreadyBooked = await bookingsCollection.find(query).toArray();
             if (alreadyBooked.length) {
@@ -153,25 +148,36 @@ app.get('/bookings', async(req, res)=>{
 
 
 
+        //Advertisement Collection : 
+        app.get('/advertisements', async(req,res)=> {
+            const email = req.query.email;
+            const query = { email: email }
+            const myAd = await advertisementCollection.find(query).toArray()
+            res.send(myAd)
+        })
 
 
-   
-        
-        app.post('/advertisement', async(req,res)=> {
-            const advertisement = req.body; 
+        app.get('/advertisement', async (req, res) => {
+            const query = {}
+            const result = await advertisementCollection.find(query).toArray()
+            res.send(result)
+        })
+
+        app.post('/advertisement', async (req, res) => {
+            const advertisement = req.body;
             const result = await advertisementCollection.insertOne(advertisement)
             res.send(result)
         })
 
-        app.delete('/advertisement/:id', async(req, res)=> {
-            const id = req.params.id; 
-            const filter = {_id:ObjectId(id)}
+        app.delete('/advertisement/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
             const result = await advertisementCollection.deleteOne(filter)
             res.send(result)
         })
-        app.delete('/users/:id',async(req, res) => {
-            const id = req.params.id; 
-            const filter = {_id:ObjectId(id)}
+        app.delete('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
             const result = await usersCollection.deleteOne(filter)
             res.send(result)
         })
@@ -190,17 +196,23 @@ app.get('/bookings', async(req, res)=>{
             const result = await usersCollection.updateOne(filter, updatedDoc, options);
             res.send(result);
         })
-     
+        //Showing data for buyer: 
+        app.get('/users/buyer/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
+            const user = await usersCollection.findOne(query)
+            res.send({ isBuyer: user?.userType === 'buyer' })
+        })
 
         //Showing Data for Seller : 
-        app.get('/users/seller/:email', async (req, res)=> {
-            const email = req.params.email; 
-            const query = {email}
+        app.get('/users/seller/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email }
             const user = await usersCollection.findOne(query)
-            res.send({isSeller:user?.userType === 'seller'})
+            res.send({ isSeller: user?.userType === 'seller' })
         })
-           // getAmin 
-           app.get('/users/admin/:email', async (req, res) => {
+        // getAmin 
+        app.get('/users/admin/:email', async (req, res) => {
             const email = req.params.email;
             const query = { email }
             const user = await usersCollection.findOne(query);
@@ -228,11 +240,11 @@ app.get('/bookings', async(req, res)=>{
         });
 
 
-        app.post('/payments', async (req, res) =>{
+        app.post('/payments', async (req, res) => {
             const payment = req.body;
             const result = await paymentsCollection.insertOne(payment);
             const id = payment.bookingId
-            const filter = {_id: ObjectId(id)}
+            const filter = { _id: ObjectId(id) }
             const updatedDoc = {
                 $set: {
                     paid: true,
@@ -244,8 +256,8 @@ app.get('/bookings', async(req, res)=>{
         })
 
     }
-    finally{
-        
+    finally {
+
     }
 }
 run().catch(console.dir);
