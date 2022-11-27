@@ -91,14 +91,14 @@ async function run(){
             const result = await feedbackCollection.find(query).limit(3).sort({$natural:-1}).toArray()
             res.send(result)
         })
-        //get Specific add by user 
-        // app.get('/userAd', async(req, res)=> {
-        //     const email = req.query.userEmail
-        //     const query = {"details.email":email}
-        //      const cursor =  advertisementCollection.find(query)
-        //      const result = await cursor.toArray()
-        //      res.send(result)
-        // })
+        // get Specific add by user 
+        app.get('/userAd', async(req, res)=> {
+            const email = req.query.userEmail
+            const query = {email:email}
+             const cursor =  advertisementCollection.find(query)
+             const result = await cursor.toArray()
+             res.send(result)
+        })
 
         app.get('/jwt', async (req, res) => {
             const email = req.query.email;
@@ -117,6 +117,28 @@ async function run(){
             const result = await advertisementCollection.find(query).toArray()
             res.send(result)
         })
+
+        app.post('/bookings', async (req, res) => {
+            const booking = req.body;
+            console.log(booking);
+            const query = {
+                email: booking.email,
+                name: booking.name    
+            }
+            const alreadyBooked = await bookingsCollection.find(query).toArray();
+            if (alreadyBooked.length) {
+                const message = `You already have a booking on ${booking.name}`
+                return res.send({ acknowledged: false, message })
+            }
+
+            const result = await bookingsCollection.insertOne(booking);
+            res.send(result);
+        });
+
+
+
+
+
    
         
         app.post('/advertisement', async(req,res)=> {
@@ -131,7 +153,7 @@ async function run(){
             const result = await advertisementCollection.deleteOne(filter)
             res.send(result)
         })
-        app.delete('/users/:id', async(req, res) => {
+        app.delete('/users/:id',async(req, res) => {
             const id = req.params.id; 
             const filter = {_id:ObjectId(id)}
             const result = await usersCollection.deleteOne(filter)
