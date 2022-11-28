@@ -81,6 +81,21 @@ async function run() {
             const result = await usersCollection.insertOne(user);
             res.send(result);
         });
+        app.patch('/user/:id', async(req, res)=> {
+            const id = req.params.id;
+            const status = req.body.status
+            const query = {_id:ObjectId(id)}
+            const updatedDoc = {
+              $set: {
+                status: status
+              }
+            }
+            const result = await usersCollection.updateOne(query, updatedDoc)
+            res.send(result)
+           })
+           
+
+
         app.post('/feedback', async (req, res) => {
             const user = req.body;
             console.log(user);
@@ -205,8 +220,14 @@ async function run() {
 
         app.get('/advertisement', async (req, res) => {
             const query = {}
-            const result = await advertisementCollection.find(query).toArray()
-            res.send(result)
+            const ads = await advertisementCollection.find(query).toArray()
+
+            // const bookingQuery = {productName:name} 
+            // console.log(bookingQuery)
+            // const alreadyBooked = await bookingsCollection.find(bookingQuery).toArray()
+
+            // const optionBooked = alreadyBooked.filter(book => book.name === name)
+            res.send(ads)
         })
 
         app.post('/advertisement', async (req, res) => {
@@ -215,7 +236,7 @@ async function run() {
             res.send(result)
         })
 
-        app.delete('/advertisement/:id',verifyJWT, verifyAdmin, async (req, res) => {
+        app.delete('/advertisement/:id',verifyJWT, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) }
             const result = await advertisementCollection.deleteOne(filter)
