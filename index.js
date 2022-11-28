@@ -219,14 +219,15 @@ async function run() {
 
 
         app.get('/advertisement', async (req, res) => {
+            // const email = req.query.email
             const query = {}
             const ads = await advertisementCollection.find(query).toArray()
 
-            // const bookingQuery = {productName:name} 
+            // const bookingQuery = {email:email} 
             // console.log(bookingQuery)
             // const alreadyBooked = await bookingsCollection.find(bookingQuery).toArray()
 
-            // const optionBooked = alreadyBooked.filter(book => book.name === name)
+            // const optionBooked = alreadyBooked.filter(book => book.email === email)
             res.send(ads)
         })
 
