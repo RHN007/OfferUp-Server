@@ -169,13 +169,13 @@ async function run() {
             res.send(result)
         })
 
-        app.delete('/advertisement/:id', async (req, res) => {
+        app.delete('/advertisement/:id',verifyJWT, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) }
             const result = await advertisementCollection.deleteOne(filter)
             res.send(result)
         })
-        app.delete('/users/:id', async (req, res) => {
+        app.delete('/users/:id',verifyJWT, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) }
             const result = await usersCollection.deleteOne(filter)
@@ -184,7 +184,7 @@ async function run() {
 
 
         //Make Admin 
-        app.put('/users/admin/:id', async (req, res) => {
+        app.put('/users/admin/:id',verifyJWT, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) }
             const options = { upsert: true };
