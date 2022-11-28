@@ -151,8 +151,9 @@ async function run() {
             console.log(booking);
             const query = {
                 email: booking.email,
-                name: booking.name
+                name: booking.productName
             }
+            console.log(query)
             const alreadyBooked = await bookingsCollection.find(query).toArray();
             if (alreadyBooked.length) {
                 const message = `You already have a booking on ${booking.name}`
