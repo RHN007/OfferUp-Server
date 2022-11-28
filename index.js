@@ -148,12 +148,20 @@ async function run() {
         });
 //WIshlist 
     //Sending Booking data to Server 
+    app.get('/wishlist', async(req,res)=> {
+        const email = req.query.email;
+        const query = { email: email }
+        const myAd = await wishCollection.find(query).toArray()
+        res.send(myAd)
+    })
+    
+    
     app.post('/wishlist', async (req, res) => {
         const wishlist = req.body;
         console.log(wishlist);
         const query = {
             email: wishlist.email,
-            name: wishlist.name
+            name: wishlist.productName
         }
         const alreadyBooked = await wishCollection.find(query).toArray();
         if (alreadyBooked.length) {
@@ -163,6 +171,14 @@ async function run() {
         const result = await wishCollection.insertOne(wishlist);
         res.send(result);
     });
+
+
+    app.delete('/wishlist/:id', verifyJWT, async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: ObjectId(id) }
+        const result = await wishCollection.deleteOne(filter)
+        res.send(result)
+    })
 
 
         //Advertisement Collection : 
