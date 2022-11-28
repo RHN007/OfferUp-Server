@@ -39,6 +39,7 @@ async function run() {
         const advertisementCollection = client.db('offerUp').collection('advertisement');
         const bookingsCollection = client.db('offerUp').collection('bookings');
         const paymentsCollection = client.db('offerUp').collection('payments');
+        const wishCollection = client.db('offerUp').collection('wishlist');
 
 
         //Note: make sure verify Admin after verify JWT
@@ -145,7 +146,23 @@ async function run() {
             const result = await bookingsCollection.insertOne(booking);
             res.send(result);
         });
-
+//WIshlist 
+    //Sending Booking data to Server 
+    app.post('/wishlist', async (req, res) => {
+        const wishlist = req.body;
+        console.log(wishlist);
+        const query = {
+            email: wishlist.email,
+            name: wishlist.name
+        }
+        const alreadyBooked = await wishCollection.find(query).toArray();
+        if (alreadyBooked.length) {
+            const message = `You already have a added in your wishlist on ${wishlist.name}`
+            return res.send({ acknowledged: false, message })
+        }
+        const result = await wishCollection.insertOne(wishlist);
+        res.send(result);
+    });
 
 
         //Advertisement Collection : 
@@ -155,6 +172,19 @@ async function run() {
             const myAd = await advertisementCollection.find(query).toArray()
             res.send(myAd)
         })
+        app.patch('/advertisements/:id', async(req, res)=> {
+            const id = req.params.id;
+            const status = req.body.status
+            const query = {_id:ObjectId(id)}
+            const updatedDoc = {
+              $set: {
+                status: status
+              }
+            }
+            const result = await advertisementCollection.updateOne(query, updatedDoc)
+            res.send(result)
+           })
+           
 
 
         app.get('/advertisement', async (req, res) => {
