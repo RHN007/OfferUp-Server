@@ -163,7 +163,7 @@ async function run() {
             const result = await bookingsCollection.insertOne(booking);
             res.send(result);
         });
-        app.delete('/bookings/:id', verifyJWT, async (req, res) => {
+        app.delete('/bookings``/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) }
             const result = await wishCollection.deleteOne(filter)
